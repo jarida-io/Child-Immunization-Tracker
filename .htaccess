@@ -1,0 +1,7 @@
+RewriteEngine On
+RewriteBase /
+
+# Redirect to login if not found
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^login$ pages/auth/login.php [L]
