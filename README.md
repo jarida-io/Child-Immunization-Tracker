@@ -184,7 +184,21 @@ Working prototype. Tested with 50+ simulated child records across 3 health worke
 
 ## Screenshots
 
-[Add 2–3 screenshots here — child list screen, dashboard, and add-child form from your local dev environment]
+**Guardian dashboard** — child list with vaccination progress bars and unread notification badge
+
+![Guardian dashboard showing two children with vaccination progress](assets/screenshots/Screenshot%202026-05-14%20at%2009.29.48.png)
+
+**Child vaccination schedule (completed doses)** — full Kenya KEPI schedule with status filters and PDF download
+
+![Amara Wambui's vaccination schedule showing completed doses](assets/screenshots/Screenshot%202026-05-14%20at%2009.31.49.png)
+
+**Missed vaccination alerts** — doses overdue trigger SMS alerts to the guardian's phone via Africa's Talking
+
+![Vaccination schedule filtered to show missed doses with alert indicators](assets/screenshots/Screenshot%202026-05-14%20at%2009.32.12.png)
+
+**Admin dashboard** — system-wide statistics: registered children, vaccinations administered, pending and missed doses
+
+![Admin dashboard with summary statistics and administration tools](assets/screenshots/Screenshot%202026-05-14%20at%2009.43.38.png)
 
 ## How to Run Locally
 
