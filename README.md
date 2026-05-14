@@ -178,8 +178,7 @@ Working prototype. Tested with 50+ simulated child records across 3 health worke
 - Admin reporting and audit logging
 
 **In progress / planned:**
-- SMS appointment reminders (email-only currently; SMS gateway integration is planned as part of the ClimateShield AI alert pipeline)
-- Environment-variable-based configuration (credentials are currently hardcoded for local development)
+- Environment-variable-based configuration (credentials are currently hardcoded for local development; production deployment should use server env vars)
 - Zone / sub-county coverage analytics
 
 ## Screenshots
