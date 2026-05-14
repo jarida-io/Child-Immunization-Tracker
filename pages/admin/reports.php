@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id']) || strtolower($_SESSION['role']) !== 'admin') {
 }
 
 $valid_types = ['children', 'vaccinations', 'pending', 'users','missed', 'activity'];
-$type = $_GET['type'] ?? 'overview';
+$type = $_GET['type'] ?? 'children';
 $pageTitle = ucfirst($type) . " Report";
 
 // Fetch data based on type

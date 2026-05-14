@@ -130,6 +130,11 @@ try {
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 1.5rem;
+            padding-bottom: 1.5rem;
+            box-sizing: border-box;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
             transition: transform 0.2s;
         }
 
@@ -139,11 +144,13 @@ try {
         }
 
         .child-card .btn {
-            display: inline-block !important;
+            display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
-            margin-top: 1rem;
+            margin-top: auto;
+            padding-top: 1rem;
             width: 100%;
+            box-sizing: border-box;
             text-align: center;
             background-color: var(--primary-color) !important;
             color: white !important;

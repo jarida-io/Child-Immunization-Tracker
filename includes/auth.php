@@ -96,6 +96,11 @@ function loginUser($email, $password) {
     $stmt->execute([$email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($user && password_verify($password, $user['password'])) {
+        // Allow SKIP_TFA env var to bypass email 2FA (demo/local-dev only)
+        if (getenv('SKIP_TFA') === 'true') {
+            completeLogin($user);
+            return true;
+        }
         // Generate and send TFA code
         $tfaCode = generateTFACode();
         if (sendTFACode($email, $tfaCode)) {
