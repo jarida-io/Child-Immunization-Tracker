@@ -30,6 +30,3 @@ SVG mockups of each key screen — open directly in a browser, Figma, or any vec
 - [kenyan_sign_language_app](https://github.com/jarida-io/kenyan_sign_language_app) — sister project, MediaPipe-based KSL Translator
 - [.github (org profile)](https://github.com/jarida-io/.github) — Jarida Open Source landing page
 
-## For the video team
-
-See [`VIDEO_DEMO_INSTRUCTIONS.md`](../VIDEO_DEMO_INSTRUCTIONS.md) at the repo root for the full 2-minute pitch video script and shot list.
