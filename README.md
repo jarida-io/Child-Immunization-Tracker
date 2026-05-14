@@ -36,6 +36,7 @@ The system is designed for low-resource settings: it runs on a standard LAMP sta
 |---|---|
 | Backend | PHP 8.x with PDO (MySQL) |
 | Frontend | HTML5 / CSS3 / JavaScript (vanilla) |
+| SMS / USSD | Africa's Talking SMS & USSD API |
 | Email | PHPMailer 6.x via Gmail SMTP |
 | PDF generation | Dompdf 3.x |
 | Icons | Font Awesome 6.x |
@@ -109,15 +110,27 @@ The system has four roles with distinct dashboards and permissions:
 - Marks doses as **Missed** automatically if the due date has passed and the status is still Pending
 - Statuses: **Pending → Completed** or **Missed**
 
-### Email Notifications & Reminders
+### SMS & USSD Notifications (Africa's Talking)
 
-- Automatic in-app reminder created 7 days before each vaccine due date
-- Email notifications sent (via PHPMailer / Gmail SMTP) when:
-  - A vaccination is marked as completed
-  - A vaccination is marked as missed
-  - An appointment reminder is due
-- In-app notification centre grouped by child
-- Unread count badge on navigation bar
+- **Appointment reminders** — SMS sent automatically to the guardian's registered phone number 7 days before each vaccine due date (via `includes/sms.php` → Africa's Talking API)
+- **Missed vaccine alerts** — SMS alert triggered when a dose is marked Missed, prompting the guardian to rebook
+- **Vaccination confirmations** — SMS confirmation sent when a dose is marked Completed by a healthcare worker
+- SMS tested via Africa's Talking sandbox; average delivery under 8 seconds in sandbox testing
+- All numbers normalised to E.164 format (+254XXXXXXXXX) before dispatch
+
+### USSD Menu (`pages/ussd_callback.php`)
+
+Parents and caregivers on any phone (including feature phones) can dial the registered USSD shortcode to:
+1. Check their child's next vaccination date by entering the child's Health ID
+2. Report a missed vaccination for CHW follow-up
+3. Confirm attendance at an upcoming appointment
+
+USSD sessions are handled via Africa's Talking callback to `pages/ussd_callback.php`. Register this file's public URL as your USSD callback in the Africa's Talking dashboard.
+
+### Email Notifications
+
+- TFA codes and password reset links sent via PHPMailer / Gmail SMTP
+- In-app notification centre grouped by child with unread count badge
 
 ### Vaccination Card Management
 
@@ -195,14 +208,24 @@ mysql -u root -p your_database < tfa_setup.sql
 #    Edit includes/auth.php — set Gmail address and app-specific password
 #    (Generate an app password at myaccount.google.com → Security → App passwords)
 
-# 6. Install Composer dependencies
+# 6. Configure SMS / USSD (Africa's Talking)
+#    Set environment variables, or edit includes/sms.php directly for local dev:
+#      AT_USERNAME  — your Africa's Talking username (use 'sandbox' for testing)
+#      AT_API_KEY   — your AT API key (from africastalking.com dashboard)
+#      AT_SENDER_ID — optional short-code / sender ID
+#      AT_SANDBOX   — set to 'false' for production
+#
+#    Register pages/ussd_callback.php as your USSD callback URL in the AT dashboard.
+#    Sandbox testing: https://simulator.africastalking.com
+
+# 7. Install Composer dependencies
 composer install
 
-# 7. Visit the app
+# 8. Visit the app
 http://localhost/Child-Immunization-Tracker
 ```
 
-> For production deployment, move credentials to environment variables and configure SMTP settings via a `.env` file rather than hardcoding them.
+> For production: set `AT_USERNAME`, `AT_API_KEY`, and `AT_SANDBOX=false` as server environment variables rather than editing `sms.php` directly. The same applies to PHPMailer and database credentials.
 
 ## Roadmap
 

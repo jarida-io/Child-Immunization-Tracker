@@ -74,7 +74,20 @@ We welcome:
    ```
    Generate a Gmail app password at **myaccount.google.com → Security → App passwords**.
 
-   > For production, move these values to environment variables (`.env` + `$_ENV`). Hardcoded credentials are intentionally avoided in production and are a known open issue.
+6. **Configure SMS / USSD (Africa's Talking)**
+
+   Set environment variables (recommended) or edit `includes/sms.php` for local testing:
+   ```
+   AT_USERNAME=sandbox
+   AT_API_KEY=your_at_api_key
+   AT_SENDER_ID=          # optional
+   AT_SANDBOX=true        # set to false for production
+   ```
+   - Create a free sandbox account at [africastalking.com](https://africastalking.com)
+   - Test SMS delivery via the [AT Sandbox Simulator](https://simulator.africastalking.com)
+   - Register `pages/ussd_callback.php`'s public URL as the USSD callback in the AT dashboard
+
+   > For production, set `AT_SANDBOX=false` and supply your production `AT_API_KEY`.
 
 6. **Place the project in your web server root**
 

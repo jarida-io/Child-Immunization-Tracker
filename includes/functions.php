@@ -1,5 +1,6 @@
 <?php
 require 'db.php';
+require_once __DIR__ . '/sms.php';
 
 if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
     session_start();
@@ -115,29 +116,44 @@ function getChildName($child_id) {
 
 function createNotification($child_id, $vaccine_name, $due_date) {
     global $conn;
-    // Get guardian ID
-    $stmt = $conn->prepare("SELECT guardian_id FROM children WHERE child_id = ?");
+
+    // Get guardian ID, child name, and guardian phone in one query
+    $stmt = $conn->prepare(
+        "SELECT c.guardian_id, c.name AS child_name, u.phone AS guardian_phone
+         FROM children c
+         JOIN users u ON c.guardian_id = u.user_id
+         WHERE c.child_id = ?"
+    );
     if (!$stmt->execute([$child_id]) || !$stmt->rowCount()) {
         return false;
     }
-    $guardian_id = $stmt->fetchColumn();
+    $row         = $stmt->fetch(PDO::FETCH_ASSOC);
+    $guardian_id = $row['guardian_id'];
+    $child_name  = $row['child_name'];
+    $phone       = $row['guardian_phone'];
 
-    // Create message
+    // Create in-app notification message
     $formatted_date = date('F j, Y', strtotime($due_date));
     $message = "Upcoming vaccination: $vaccine_name due on $formatted_date";
 
-    // Create notification
+    // Persist in-app notification
     try {
-        $stmt = $conn->prepare("INSERT INTO notifications 
+        $stmt = $conn->prepare("INSERT INTO notifications
                               (user_id, child_id, message, is_read, created_at)
                               VALUES (?, ?, ?, 0, NOW())");
         if (!$stmt->execute([$guardian_id, $child_id, $message])) {
             throw new PDOException(implode(", ", $stmt->errorInfo()));
         }
-        return true;
     } catch (PDOException $e) {
         return false;
     }
+
+    // Send SMS reminder if guardian has a phone number
+    if (!empty($phone)) {
+        sendAppointmentReminderSMS($phone, $child_name, $vaccine_name, $due_date);
+    }
+
+    return true;
 }
 
 
@@ -248,24 +264,46 @@ function markVaccinationCompleted($schedule_id, $administered_date = null, $admi
 function notifyMissedVaccines($child_id) {
     global $conn;
 
-    $stmt = $conn->prepare("SELECT vs.schedule_id, vs.due_date, v.name AS vaccine_name, c.guardian_id
-        FROM vaccination_schedule vs
-        JOIN vaccines v ON vs.vaccine_id = v.vaccine_id
-        JOIN children c ON vs.child_id = c.child_id
-        WHERE vs.child_id = ? AND vs.status = 'Missed'");
+    $stmt = $conn->prepare(
+        "SELECT vs.schedule_id, vs.due_date, v.name AS vaccine_name,
+                c.guardian_id, c.name AS child_name, u.phone AS guardian_phone
+         FROM vaccination_schedule vs
+         JOIN vaccines v ON vs.vaccine_id = v.vaccine_id
+         JOIN children c ON vs.child_id = c.child_id
+         JOIN users u ON c.guardian_id = u.user_id
+         WHERE vs.child_id = ? AND vs.status = 'Missed'"
+    );
     $stmt->execute([$child_id]);
     $missed = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
     foreach ($missed as $row) {
-
-
-        $notifCheck = $conn->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND child_id = ? AND message LIKE ?");
+        // Avoid duplicate in-app notifications
+        $notifCheck = $conn->prepare(
+            "SELECT COUNT(*) FROM notifications WHERE user_id = ? AND child_id = ? AND message LIKE ?"
+        );
         $likeMsg = '%Missed vaccination: ' . $row['vaccine_name'] . '%';
         $notifCheck->execute([$row['guardian_id'], $child_id, $likeMsg]);
+
         if ($notifCheck->fetchColumn() == 0) {
-            
-            $message = 'Missed vaccination: ' . $row['vaccine_name'] . ' (was due ' . date('F j, Y', strtotime($row['due_date'])) . ')';
-            $insert = $conn->prepare("INSERT INTO notifications (user_id, child_id, message, is_read, created_at) VALUES (?, ?, ?, 0, NOW())");
+            $message = 'Missed vaccination: ' . $row['vaccine_name']
+                     . ' (was due ' . date('F j, Y', strtotime($row['due_date'])) . ')';
+
+            // Persist in-app notification
+            $insert = $conn->prepare(
+                "INSERT INTO notifications (user_id, child_id, message, is_read, created_at)
+                 VALUES (?, ?, ?, 0, NOW())"
+            );
             $insert->execute([$row['guardian_id'], $child_id, $message]);
+
+            // Send missed vaccine SMS alert
+            if (!empty($row['guardian_phone'])) {
+                sendMissedVaccineSMS(
+                    $row['guardian_phone'],
+                    $row['child_name'],
+                    $row['vaccine_name'],
+                    $row['due_date']
+                );
+            }
         }
     }
 }
