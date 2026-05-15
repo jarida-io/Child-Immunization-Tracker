@@ -88,13 +88,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch unverified cards grouped by child
-$sql = "SELECT vc.id, vc.card_path, vc.uploaded_at, vc.child_id, c.name AS child_name,
+$sql = "SELECT ANY_VALUE(vc.id) AS id, ANY_VALUE(vc.card_path) AS card_path,
+               MAX(vc.uploaded_at) AS uploaded_at, vc.child_id, c.name AS child_name,
                COUNT(vc.id) as card_count
         FROM vaccination_cards vc
         JOIN children c ON vc.child_id = c.child_id
         WHERE vc.verified_at IS NULL
         GROUP BY vc.child_id, c.name
-        ORDER BY vc.uploaded_at DESC";
+        ORDER BY MAX(vc.uploaded_at) DESC";
 $child_cards = $conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
 ob_end_flush();

@@ -3,10 +3,10 @@
 // Sets timezone for MySQL session to match PHP
 
 // Database connection settings
-$host = 'localhost';  
-$dbname = 'cvs'; 
-$username = 'root';  
-$password = '';  
+$host     = getenv('DB_HOST')     ?: 'localhost';
+$dbname   = getenv('DB_DATABASE') ?: 'cvs';
+$username = getenv('DB_USERNAME') ?: 'root';
+$password = getenv('DB_PASSWORD') ?: '';
 
 try {
     // Create PDO connection
